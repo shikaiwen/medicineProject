@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drp.dao.FlowCardMapper">
+	
+	<!-- 添加流向单主信息 -->
+	<insert id="saveFlowCard" parameterType="com.drp.domain.FlowCard">
+		insert into t_flow_card (flow_card_id,creator_id,total_money,agent_id,create_date,flow_card_state)
+		values (#{flowCardId},#{creator.userId},#{totalMoney},#{agent.agentId},
+				#{createDate},#{flowCardState.dictId})
+	</insert>    
+
+	<!-- 添加明细 -->
+	<insert id="addFlowCardDetail" parameterType="com.drp.domain.FlowCardDetail">
+		insert into t_flow_card_detail (flow_card_detail_id,medicine_no,price,quantity,medicine_no_list,flow_card_id)
+		values(#{flowCardDetailId},#{medicine.medicineNo},#{price},#{quantity},#{medicineNoList},#{flowCardId})
+	</insert>
+
+<!-- 选择药品详细编号 -->
+	<select id="getMedicineDetailListByNum" parameterType="java.util.Map" resultType="string">
+		select medicine_detail from t_store_detail where medicine_no = #{medicineNo} and rownum &lt;= #{num}
+	</select>
+	
+	<!-- 分页查询流向单 -->
+	<select id="getResultByPage" parameterType="java.util.Map" resultMap="flowCardMap">
+		select t1.*,t2.user_name from (select a.* from (select flow_card_id ,agent_id,total_money,creator_id,create_date,flow_card_state, ROWNUM RN
+		from t_flow_card where ROWNUM &lt;= #{endRecords}
+		<if test="flowCardId != null"> and flow_card_id like concat('%',concat(#{flowCardId},'%'))</if>
+		<if test="flowCardDateFrom != null"> and create_date &gt;= to_date(#{flowCardDateFrom},'yyyy-mm-dd')</if>
+		<if test="flowCardDateTo != null">and create_date &lt;= to_date(#{flowCardDateTo},'yyyy-mm-dd')</if>
+		<if test="flowCardState != null and flowCardState !=0">and  flow_card_state = #{flowCardState}</if>
+		) a where RN &gt; #{startRecords}
+		) t1, t_user t2 where t1.creator_id = t2.user_id
+		<if test="creatorName != null and creatorName != ''"> and user_name like  concat('%',concat(#{creatorName},'%'))</if>
+	</select>
+	
+	<!-- 根据条件查询记录数 -->
+	<select id="getFlowCardCountByCondition" resultType="int" parameterType="java.util.Map">
+		<!-- select count(*) from t_order where 1=1 -->
+		 select count(*) from (select t1.*,t2.user_name from t_flow_card t1,t_user t2
+		  where 1=1 and t1.creator_id=t2.user_id
+		  <if test="userName != null and userName !=''"> and t2.user_name like concat('%',concat(#{userName},'%'))</if>
+		  <if test="flowCardId != null"> and flow_card_id like concat('%',concat(#{flowCardId},'%')) </if>
+		  <if test="flowCardDateFrom != null"> and create_date &gt;= to_date(#{flowCardDateFrom},'yyyy-mm-dd')</if>
+		  <if test="flowCardDateTo != null">and create_date &lt;= to_date(#{flowCardDateTo},'yyyy-mm-dd')</if>
+		  <if test="flowCardState != null and flowCardState !=0">and  flow_card_state = #{flowCardState}</if>
+		)
+	</select>
+	
+	<!-- 查看流向单明细 -->
+	<select id="getDetailedFlowCard" parameterType="com.drp.domain.FlowCard" resultMap="flowCardDetailMap" >
+	select flow_card_detail_id,medicine_no,price,quantity from t_flow_card_detail where flow_card_id = #{flowCardId}
+	</select>
+	
+	<!-- 查看药品明细编号-->
+	<select id="getMedicineNoList" parameterType="java.util.Map" resultType="string">
+		select medicine_no_list from t_flow_card_detail where flow_card_detail_id = #{flowCardDetailId}  
+		and  flow_card_id = #{flowCardId}
+	</select>
+	
+	
+	<!-- 删除库存药品 -->
+	<delete id="deleteMedicineDetailNo" parameterType="string">
+		delete from t_store_detail where medicine_detail = #{medicine_detail}	
+	</delete>
+	
+	<!-- 流向单状态改变 -->
+	<update id="changeOrderState" parameterType="com.drp.domain.FlowCard">
+		update t_flow_card set flow_card_state = #{flowCardState.dictId}
+	</update>
+	
+	<resultMap type="com.drp.domain.FlowCard" id="flowCardMap">
+		<result column="flow_card_id" property="flowCardId"/>
+		<result column="agent_id" property="agent.agentId"/>
+		<result column="creator_id" property="creator.userId"/>
+		<result column="flow_card_state" property="flowCardState.dictId"/>
+		<result column="create_Date" property="createDate"/>
+		<result column="total_money" property="totalMoney"/>
+	</resultMap>
+	
+	
+	<resultMap type="com.drp.domain.FlowCardDetail" id="flowCardDetailMap">
+		<result column="flow_card_detail_id" property="flowCardDetailId"/>
+		<result column="medicine_no" property="medicine.medicineNo"/>
+		<result column="quantity" property="quantity"/>
+		<result column="price" property="price"/>
+		<result column="medicine_no_list" property="medicineNoList"/>
+	</resultMap>
+
+</mapper>

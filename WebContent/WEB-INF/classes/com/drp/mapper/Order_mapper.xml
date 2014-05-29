@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drp.dao.OrderMapper">
+	
+	<!-- 添加订单主信息 -->
+	<insert id="addOrderMainInfo" parameterType="com.drp.domain.Order">
+		insert into t_order (order_id,order_state,creator_id,total_money,agent_id,order_date)
+		values (#{orderId},#{orderState.dictId},#{creator.userId},#{totalMoney},#{agent.agentId},#{orderDate})
+	</insert>
+
+	<!-- 添加订单明细信息 -->	
+	<insert id="addOrderDetailInfo" parameterType="com.drp.domain.OrderDetail">
+		insert into t_order_detail (order_id,detail_id,medicine_no,price,quantity)
+		values (#{order.orderId},#{detailId},#{medicine.medicineNo},#{price},#{quantity})
+	</insert>
+	
+	<select id="getResultByPage" parameterType="java.util.Map" resultMap="orderMap">
+		select t1.*,t2.user_name from (select a.* from (select order_id ,agent_id,creator_id,total_money,order_date,order_state, ROWNUM RN
+		from t_order where ROWNUM &lt;= #{endRecords}
+		<if test="operator != null and operator != 0.0 and totalMoney != 0.0">
+		<choose>
+			<when test="operator = 249">and total_money &gt; #{totalMoney}</when>
+			<when test="operator = 247">and total_money &lt; #{totalMoney}</when>
+			<when test="and operator = 248">and total_money = #{totalMoney}</when>
+		</choose>
+		</if>
+		<if test="orderDateFrom != null and orderDateFrom !=''"> and order_date &gt;= to_date(#{orderDateFrom},'yyyy-mm-dd')</if>
+		<if test="orderDateTo != null and orderDateTo != ''">and order_date &lt;= to_date(#{orderDateTo},'yyyy-mm-dd')</if>
+		<if test="orderId != null and orderId != ''"> and order_id like concat('%',concat(#{orderId},'%')) </if>
+		<if test="orderState != null and orderState != 0"> and order_state = #{orderState}</if>
+		) a where RN &gt; #{startRecords}
+		) t1, t_user t2 where t1.creator_id = t2.user_id
+		<if test="userName != null and userName != ''"> and user_name like  concat('%',concat(#{userName},'%'))</if>
+		<if test="agent.agentId != 100">
+			and agent_id = #{agent.agentId} 
+		</if>
+		<if test="agent.agentId == 100">
+			and order_state !=241
+		</if>
+	</select>
+	
+	<!-- 根据条件查询记录数 -->	<!-- 这里的大于号和小于号用实体表示要用相反的，为什么?待探究 -->
+	<select id="getOrderCountByCondition" resultType="int" parameterType="java.util.Map">
+		<!-- select count(*) from t_order where 1=1 -->
+		 select count(*) from (select t1.*,t2.user_name from t_order t1,t_user t2
+		  where 1=1 and t1.creator_id=t2.user_id
+		  <if test="userName != null and userName !=''"> and t2.user_name like concat('%',concat(#{userName},'%'))</if>
+		  
+		<if test="operator != null and operator != 0 and totalMoney != 0.0">
+		<choose>
+			<when test="operator = 249">and total_money &gt; #{totalMoney}</when>
+			<when test="operator = 247">and total_money &lt; #{totalMoney}</when>
+			<when test="operator = 248">and total_money = #{totalMoney}</when>
+		</choose>
+		</if>
+		<if test="orderDateFrom != null and orderDateFrom != ''"> and order_date &gt;= to_date(#{orderDateFrom},'yyyy-mm-dd')</if>
+		<if test="orderDateTo != null and orderDateTo != ''">and order_date &lt;= to_date(#{orderDateTo},'yyyy-mm-dd')</if>
+		<if test="orderId != null and orderId != ''"> and order_id like concat('%',concat(#{orderId},'%')) </if>
+		<if test="orderState != null and orderState != 0"> and order_state = #{orderState}</if>
+		
+		<if test="agent.agentId != 100">
+			and agent_id = #{agent.agentId} 
+		</if>
+		<if test="agent.agentId == 100">
+			and order_state !=241
+		</if>
+		)
+	</select>
+	
+	<!-- 删除订单主信息 -->
+	<delete id="deleteOrderMain" parameterType="com.drp.domain.Order">
+		delete from t_order where order_id = #{orderId}
+	</delete>
+	
+	<!-- 删除订单详细信息 -->
+	<delete id="deleteOrderSub" parameterType="com.drp.domain.Order">
+		delete from t_order_detail where order_id = #{orderId}
+	 </delete>
+	 
+	 <!-- 提交订单 -->
+	<update id="submitOrder" parameterType="com.drp.domain.Order">
+		update t_order set order_state = #{orderState.dictId} where order_id=#{orderId}
+	</update>
+	
+	<!-- 查看订单明细 -->
+	<select id="getDetailedOrder" parameterType="com.drp.domain.Order" resultMap="orderDetailMap" >
+	select detail_id,medicine_no,price,quantity from t_order_detail where order_id = #{orderId}
+	</select>
+	
+	<!-- 根据订单编号查询订单 -->
+	<select id="getOrderById" parameterType="com.drp.domain.Order" resultMap="orderMap">
+		select * from t_order where order_id = #{orderId}
+	</select>
+	
+	<!-- 查询明细是否存在 -->
+	<select id="detailIsExist" parameterType="java.util.Map" resultType="int">
+		select count(*) from t_order_detail where order_id = #{orderId} and detail_id = #{detailId}
+	</select>
+	
+	<!-- 更新订单明细的价格和数量 -->
+	<update id="updateDetail" parameterType="com.drp.domain.OrderDetail">
+		update t_order_detail set price = #{price} ,quantity = #{quantity} where 
+		order_id=#{order.orderId} and detail_id = #{detailId}
+	</update>
+	
+	<!-- 获取所有订单明细号 -->
+	<select id="getDetailIdByOrderId" parameterType="java.util.Map" resultType="string">
+		select detail_id from t_order_detail where order_id = #{orderId}
+	</select>
+	
+	<!-- 删除订单明细 -->
+	<delete id="deleteOrderDetail" parameterType="java.util.Map">
+		delete from t_order_detail where order_id = #{orderId} and detail_id = #{detailId}
+	</delete>
+	
+	
+	<!-- 更新总价格 -->
+	<update id="updateTotalPrice" parameterType="java.util.Map">
+		update t_order set total_money = #{totalMoney} where order_id = #{orderId}
+	</update>
+	
+	<resultMap type="com.drp.domain.Order" id="orderMap">
+		<result column="order_id" property="orderId"/>
+		<result column="agent_id" property="agent.agentId"/>
+		<result column="creator_id" property="creator.userId"/>
+		<result column="order_state" property="orderState.dictId"/>
+		<result column="order_date" property="orderDate"/>
+		<result column="total_money" property="totalMoney"/>
+	</resultMap>
+	
+	<resultMap type="com.drp.domain.OrderDetail" id="orderDetailMap">
+		<result column="medicine_No" property="medicine.medicineNo"/>
+		<result column="detail_id" property="detailId"/>
+		<result column="quantity" property="quantity"/>
+		<result column="price" property="price"/>
+	</resultMap>
+	
+
+
+</mapper>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drp.dao.UserMapper">
+	
+	<insert id="addUser" parameterType="com.drp.domain.User"><!-- agent_admin_user_id就是属于那个分销商的代码 -->
+		insert into t_user (user_id,user_name,password,create_date,email,contact_tel,agent_admin_user_id)
+		values(#{userId},#{userName},#{password},#{createDate},#{email},#{contactTel},#{belongAgentId})
+	</insert>
+	
+	<!-- 获取所有用户 -->	
+	<select id="getAllUser" resultMap="userMap" parameterType="com.drp.domain.User">
+		select user_id,user_name,password,create_date,email,contact_tel,agent_admin_user_id from t_user
+	</select>
+	
+	<!-- 根据页数获取 -->
+	<select id="getResultByPage" parameterType="java.util.Map" resultMap="userMap">
+	<!-- 这里的小于一定要这样写 -->
+	select a.* from  (select t.*,ROWNUM RN from t_user t where ROWNUM &lt;= #{endRecords}
+	<if test="userName != null and userName != ''">
+		and t.user_name = concat(''',concat(#{userName},'''))
+	</if>
+	<if test="userId != null and userId != ''">
+		and t.user_id = #{userId}
+	</if>
+	) a where a.RN > #{startRecords}
+	</select>
+	
+	<!-- 根据id查询用户 -->
+	<select id="getUserById" parameterType="com.drp.domain.User" resultMap="userMap">
+		select * from t_user where user_id = #{userId}
+	</select>
+	
+	<update id="modifyUser" parameterType="com.drp.domain.User">
+		update t_user set
+		<if test="userName != null and userName !=''">user_name = #{userName},</if>
+		<if test="createDate != null">create_date = #{createDate},</if>
+		<if test="email != null and email != ''"> email = #{email},</if>
+		<if test="contactTel != null and contactTel != ''">contact_tel = #{contactTel},</if>
+		<if test="belongAgentId != 0"> agent_admin_user_id = #{belongAgentId},</if>
+		<if test="userId !=null">user_id = #{userId}</if>
+			where user_id = #{userId}
+	</update>
+	
+	
+	<!-- 删除用户 -->
+	<delete id="deleteUser" parameterType="com.drp.domain.User">
+		delete from t_user where user_id = #{userId}
+	</delete>
+	
+	<!-- 获取所有用户数目 -->
+	<select id="getAllUserCount" resultType="int" >
+		select count(*) from t_user
+	</select>
+	
+	
+	<!-- 检查该用户是否存在 -->
+	<select id="getUser" resultMap="userMap" parameterType="com.drp.domain.User">
+		select user_id,user_name,password,create_date,email,contact_tel,agent_admin_user_id from t_user
+		where user_id = #{userId} and password = #{password}
+	</select>
+	
+	<!-- 修改密码 -->
+	<update id="modifyPassword" parameterType="com.drp.domain.User">
+		update t_user set password = #{password} where user_id = #{userId}
+	</update>
+	
+	<resultMap type="com.drp.domain.User" id="userMap">
+		<result column="user_id" property="userId"/>
+		<result column="user_name" property="userName"/>
+		<result column="password" property="password"/>
+		<result column="contact_tel" property="contactTel"/>
+		<result column="email" property="email"/>
+		<result column="create_date" property="createDate"/>
+		<result column="agent_admin_user_id" property="belongAgentId"></result>
+	</resultMap>
+
+</mapper>

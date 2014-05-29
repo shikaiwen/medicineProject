@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<root>
+	<functions>
+		<function id="OrderAction_importOrder">
+				var json = eval({0});
+				window.parent.deserializeData(json);
+		</function>
+	</functions>
+</root>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	"http://struts.apache.org/dtds/struts-2.3.dtd">
+
+<struts>
+    <constant name="struts.enable.DynamicMethodInvocation" value="true" />
+    <constant name="struts.devMode" value="true" />
+    <constant name="struts.i18n.encoding" value="GBK"></constant>
+	<constant name="struts.ui.theme" value="simple"/>
+	
+
+    <package name="default"  extends="struts-default">
+   
+	     <interceptors>  
+	      <interceptor name="validateInterceptor" class="com.drp.global.ValidateInterceptor"/>    
+	      <interceptor-stack name="myStack">       
+	       	 <interceptor-ref name="validateInterceptor"/>
+	         <interceptor-ref name="defaultStack"/>     
+	      </interceptor-stack>     
+	    </interceptors>    
+	    <default-interceptor-ref name="myStack"/>
+	    
+	   <global-results>
+    	<result name="loginError">/login.jsp</result>
+    </global-results>
+    
+    	<action name="FindAllUser" class="com.drp.action.FindAllUser" method="myexecute">
+    	<result>/main.jsp</result>
+    	</action>
+
+    </package>
+    
+   <package name="sys" namespace="/sys" extends="default">
+
+   		<action name="UserAction" class="com.drp.action.UserAction"/>
+   		<action name="login" class="com.drp.action.LoginAction">
+   			<result name="success">/main.jsp</result>
+   			<result name="agentMain">/agentMain.jsp</result>
+   			<result name="error" >/login.jsp</result>
+   		</action>
+   </package>
+   
+   <package name="dict" namespace="/datadict" extends="default">
+    	<action name="DictAction" class="com.drp.dict.DictAction"/>
+   </package>
+    
+   <package name="basedata" namespace="/basedata" extends="default">
+    	<action name="AgentAction" class="com.drp.action.AgentAction">
+    		<result name="showAgentInfo" >/basedata/agent_view.jsp</result>
+    		<result name="showRegionInfo" >/basedata/region_view.jsp</result>
+    		<result name="afterAdd">/basedata/agent_view.jsp</result>
+    		<result name="afterAddRegion" >/basedata/region_view.jsp</result>
+    		<result name="toModifyAgent" >/basedata/agent_modify.jsp</result>
+    		<result name="toModifyRegion" >/basedata/region_modify.jsp</result>
+    	</action>
+    	<action name="MedicineAction" class="com.drp.action.MedicineAction">
+    		<result name="uploadOver">/basedata/addUploadOver.jsp</result>
+    		<result name="modifyUploadOver">/basedata/modifyUploadOver.jsp</result>
+    	</action>
+    	<action name="zTreeComponent" class="test.ZtreeComponentAction">
+    		<result name="showTree" type="velocity">
+    			<param name="location">/ztree/treePage.vm</param>
+    		</result>
+    	</action>
+    </package>
+
+   <package name="order" namespace="/order" extends="default">
+    	<action name="OrderAction" class="com.drp.action.OrderAction">
+    	<result name="showDetail">/ordermgr/detailExpand.jsp</result>
+    	<result name="toModify">/ordermgr/order_modify.jsp</result>
+    	</action>
+   </package>
+    
+    <package name="store" namespace="/store" extends="default" >
+    	<action name="StoreAction" class="com.drp.action.StoreAction"></action>
+    </package>
+    
+	<package name="flowCard" namespace="/flowCard" extends="default">
+    	<action name="FlowCardAction" class="com.drp.action.FlowCardAction">
+    		<result name="showFlowCardDetail">/flow_card/detailExpand.jsp</result>
+    		<result name="showSendInfo">/ordermgr/showFlowCard.jsp</result>
+    	</action>
+    </package>
+    
+    <package name="report" namespace="/report" extends="default">
+    	<action name="reportAction" class="com.drp.action.ReportAction">
+    		<result name="">/flow_card/detailExpand.jsp</result>
+    	</action>
+    </package>
+</struts>

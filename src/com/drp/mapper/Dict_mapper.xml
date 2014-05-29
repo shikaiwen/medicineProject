@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drp.dict.DictMapper">
+	
+	<insert id="addDict" parameterType="com.drp.dict.Dict">
+		<selectKey keyProperty="dictId" resultType="int" order="BEFORE">
+			select  datadict_sequence.nextVAL  from dual
+		</selectKey>
+		insert into t_data_dict (id,name,category,pid,is_leaf,is_main,value,isValueDict)
+		values(#{dictId},#{dictName},#{category},#{pid},#{is_leaf},#{is_main},#{value},#{isValueDict})
+	</insert>
+	
+	<!-- 获取类别最大值 -->
+	<select id="getMaxCategory" resultType="string">
+		select MAX(category) from t_data_dict
+	</select>
+
+	<!--获取所有字典主类型  -->
+	<select id="getAllDictObj" resultMap="DictObj">
+		select id,name,category,pid,is_leaf,is_main,value,isValueDict from t_data_dict where is_main='Y'
+	</select>
+	
+	<!-- 根据类型获取字典对象 -->
+	<select id="getDictListByType" resultMap="DictObj" parameterType="string">
+		select id,name,category,pid,is_leaf,is_main,isValueDict,value from t_data_dict where category = #{param1} and is_main='N'
+	</select>
+	
+	<!-- 修改字典 -->
+	<update id="modifyDict" parameterType="com.drp.dict.Dict">
+		update t_data_dict set
+		<if test="dictName != null">name = #{dictName},</if>
+		<if test="value != null and value != ''">value = #{value},</if>
+		<if test="dictId != null">id = #{dictId}</if>
+		
+		where id = #{dictId}
+	</update>
+	
+	<!-- 删除单个节点 -->
+	<delete id="deleteDict" parameterType="com.drp.dict.Dict">
+		delete from t_data_dict where id = #{dictId}
+	</delete>
+	
+	<!-- 删除主节点 -->
+	<delete id="deleteMainDict" parameterType="com.drp.dict.Dict">
+		delete from t_data_dict where id = #{dictId} or pid = #{dictId}
+	</delete>
+	
+	
+	<!-- 获取该节点的子节点 -->
+	<select id="getSubDict" parameterType="com.drp.dict.Dict">
+		select id,name,category,pid,is_leaf,is_main,isValueDict,value from t_data_dict where pid = #{dictId}
+	</select>
+	
+	<!-- 获取所有省 -->
+	<select id="getAllProvince" resultMap="provinceModle">
+		select id,province_id,province_name from t_province
+	</select>
+	
+	
+	<!-- 根据省份获取市 -->
+	<select id="getCityByProvince" parameterType="com.drp.domain.AreaDataModel" resultMap="cityModle">
+		select id,city_id,city_name,pid from t_city where pid = #{areaId}
+	</select>
+	
+		<!-- 根据市区获取县(区) -->
+	<select id="getAreaByCity" parameterType="com.drp.domain.AreaDataModel" resultMap="areaModle">
+		select id,area_id,area_name,pid from t_area where pid = #{areaId}
+	</select>
+	
+	
+	<select id="getDictById" parameterType="com.drp.dict.Dict" resultMap="DictObj">
+		select * from t_data_dict where id = #{dictId}
+	</select>
+	
+	
+	<!-- 省数据模型 -->
+	<resultMap type="com.drp.domain.AreaDataModel" id="provinceModle">
+		<result column="id" property="id"/>
+		<result column="province_id" property="areaId"/>
+		<result column="province_name" property="areaName"/>
+	</resultMap>
+	
+	<!-- 市数据模型 -->
+	<resultMap type="com.drp.domain.AreaDataModel" id="cityModle">
+		<result column="id" property="id"/>
+		<result column="city_id" property="areaId"/>
+		<result column="city_name" property="areaName"/>
+		<result column="pid" property="pid"></result>
+	</resultMap>
+	
+	<!-- 区数据模型 -->
+	<resultMap type="com.drp.domain.AreaDataModel" id="areaModle">
+		<result column="id" property="id"/>
+		<result column="area_id" property="areaId"/>
+		<result column="area_name" property="areaName"/>
+		<result column="pid" property="pid"/>
+	</resultMap>
+	
+	<resultMap type="com.drp.dict.Dict" id="DictObj">
+		<result column="id" property="dictId" javaType="int"/>
+		<result column="name" property="dictName" javaType="string"/>
+		<result column="category" property="category" javaType="string"/>
+		<result column="pid" property="pid" javaType="int"/>
+		<result column="is_leaf" property="is_leaf" javaType="string"/>
+		<result column="is_main" property="is_main" javaType="string"/>
+		<result column="isValueDict" property="isValueDict"></result>
+		<result column="value" property="value"/>
+	</resultMap>
+</mapper>

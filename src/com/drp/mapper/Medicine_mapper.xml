@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drp.dao.MedicineMapper">
+	
+	 
+	<insert id="addMedicine" parameterType="com.drp.domain.Medicine">
+		insert into t_medicine (medicine_no,medicine_name,approval_number,specification,
+					ingredients,unit,usage_dosage,function_type,manage_type,manufacturer,
+					use_special_price,price,img,descriptions,normal_name)
+			values(#{medicineNo},#{medicineName},#{approvalNumber},#{specification},
+					#{ingredients},#{unit.dictId},#{usageDosage},#{functionType.dictId},#{manageType.dictId},#{manufacturer},
+					#{useSpecialPrice.dictId},#{price},#{img},#{descriptions},#{normalName}
+			)
+	</insert>
+	
+	<select id="getResultByPage" parameterType="java.util.Map" resultMap="medicineMap">
+			select a.*
+			  from (select medicine_no,
+			               medicine_name,
+			               normal_name,
+			               approval_number,
+			               manufacturer,
+			               price,
+			               manage_type,
+			               unit,
+			               usage_dosage,
+			               use_special_price,
+			               product_label,
+			               specification,
+			               ingredients,
+			               img,
+			               descriptions,
+			               function_type, ROWNUM RN
+			          from t_medicine
+			         where ROWNUM &lt;= #{endRecords}
+	<if test="medicineNo != null">and medicine_no like concat('%',concat(#{medicineNo},'%'))</if>
+	<if test="medicineName != null">and medicine_name like concat('%',concat(#{medicineName},'%'))</if>
+	<if test="normalName != null">and normal_name like concat('%',concat(#{normalName},'%'))</if>
+    <if test="functionType != 0 and functionType != null"> and function_type = #{functionType}</if>		
+	<if test="manageType != 0 and manageType != null"> and manage_type = #{manageType}</if>	 
+			       ) a
+			 where a.RN > #{startRecords}
+	</select>
+	
+		<!-- 
+	<if test="medicineNo != null">
+		and t.user_name = concat(''',concat(#{userName},'''))
+	</if>
+	<if test="userId != null and userId != ''">
+		and t.user_id = #{userId}
+	</if>
+	 -->
+	
+	<select id="getAllMedicineCount" resultType="int">
+		select count(*) from t_medicine
+	</select>
+	
+	<!-- 获取药品的序列号 -->
+	<select id="getMedicineSequenceNextVal" resultType="int">
+		select medicine_sequence.nextval from dual 
+	</select>
+	
+	<!-- 删除图片 -->
+	<update id="deletePic" parameterType="com.drp.domain.Medicine">
+		update t_medicine set img = #{img} where medicine_no = #{medicineNo}
+	</update>
+	
+	<!-- 根据medicineNo查询 -->
+	<select id="getMedicineByNo" resultMap="medicineMap" parameterType="com.drp.domain.Medicine">
+		select * from t_medicine where medicine_no = #{medicineNo}
+	</select>
+	
+	<!-- 删除药品 -->
+	<delete id="deleteMedicine" parameterType="com.drp.domain.Medicine">
+		delete from t_medicine where medicine_no = #{medicineNo}
+	</delete>
+	
+	
+	<!-- 修改药品 -->
+	<update id="modifyMedicine" parameterType="com.drp.domain.Medicine">
+		update t_medicine  set
+		<if test="medicineName != null and medicineName !=''">medicine_name = #{medicineName},</if>
+		<if test="approvalNumber != null">approval_number = #{approvalNumber},</if>
+		<if test="specification != null and specification != ''"> specification = #{specification},</if>
+		<if test="unit != null"> unit = #{unit.dictId},</if>
+		<if test="usageDosage != null"> usage_dosage = #{usageDosage},</if>
+		<if test="manufacturer != null"> manufacturer = #{manufacturer},</if>
+		<if test="price != 0"> price = #{price},</if>
+		<if test="img != null and img != ''"> img = #{img},</if>
+		<if test="manageType != null"> manage_type = #{manageType.dictId},</if>
+		<if test="functionType != null"> function_type = #{functionType.dictId},</if>
+		<if test="productLabel != null"> product_label = #{productLabel},</if>
+		<if test="normalName != null"> normal_name = #{normalName},</if>
+		<if test="descriptions != null"> descriptions = #{descriptions},</if>
+		<if test="useSpecialPrice != null"> use_special_price = #{useSpecialPrice.dictId},</if>
+		<if test="ingredients != null"> ingredients = #{ingredients},</if>
+		<if test="medicineNo !=null">medicine_no = #{medicineNo}</if>
+			where medicine_no = #{medicineNo}
+	</update>
+	
+	<resultMap type="com.drp.domain.Medicine" id="medicineMap">
+		<result column="medicine_no" property="medicineNo"/>
+		<result column="medicine_name" property="medicineName"/>
+		<result column="normal_name" property="normalName"/>
+		<result column="approval_number" property="approvalNumber"/>
+		<result column="specification" property="specification"/>
+		<result column="unit" property="unit.dictId"/>
+		<result column="usage_dosage" property="usageDosage"/>
+		<result column="price" property="price"/>
+		<result column="manage_type" property="manageType.dictId"/>
+		<result column="descriptions" property="descriptions"/>
+		<result column="function_type" property="functionType.dictId"/>
+		<result column="product_label" property="productLabel"/>
+		<result column="use_special_price" property="useSpecialPrice.dictId"/>
+		<result column="ingredients" property="ingredients"/>
+		<result column="img" property="img"/>
+	</resultMap>
+	
+</mapper>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drp.dao.StoreMapper">
+	
+	
+	
+	<!-- 添加主信息 -->
+	<insert id="addMainCard" parameterType="com.drp.domain.StoreCard">
+		insert into t_store (store_id,user_id,create_date) values(#{storeId},
+							#{creator.userId},#{createDate})
+	</insert>
+	
+	<!-- 添加详细信息 -->
+	<insert id="initMedicineDetail" parameterType="java.util.Map">
+		insert into t_store_detail (store_id,medicine_no,medicine_detail,user_id) 
+				values( #{storeId},#{medicineNo},#{medicineDetailNo},#{userId})
+	</insert>
+	
+	
+	<!-- 查看入库情况 -->
+	<select id="selectInstoreInfo" parameterType="com.drp.domain.StoreCard" resultMap="storeCardMap">
+		select store_id,user_id,create_date from t_store
+	</select>
+
+	<!-- 查看明细 -->
+	<select id="getDetail" parameterType="com.drp.domain.StoreCard" resultMap="storeCardDetailMap">
+		select medicine_no,medicine_detail,user_id,store_id from t_store_detail
+		where store_id = #{storeId}
+	</select>
+	
+	
+	<select id="selectDistinctMedicineNo" parameterType="com.drp.domain.StoreCard" resultType="java.util.List">
+		select distinct medicine_no from  t_store_detail 
+	</select>
+	
+	<!-- 检查库存 -->
+	<select id="checkStoreByMedicineNo" parameterType="com.drp.domain.StoreCardDetail" resultType="int">
+		select count(*) from t_store_detail where medicine_no = #{medicine.medicineNo}
+	</select>
+	
+	
+	<resultMap id="storeCardMap" type="com.drp.domain.StoreCard">
+		<result column="store_id" property="storeId"/>
+		<result column="user_id" property="creator.userId"/>
+		<result column="create_date" property="createDate"/>
+	</resultMap>
+	
+	<resultMap type="com.drp.domain.StoreCardDetail" id="storeCardDetailMap">
+		<result column="medicine_detail" property="detailNo"/>
+		<result column="medicine_no" property="medicine.medicineNo"/>
+	</resultMap>
+
+</mapper>

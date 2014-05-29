@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drp.dao.ReportMapper">
+	
+	<!-- 药品情况统计信息 -->
+<select id="queryMedicineSaleInfo" resultMap="medicineSaleInfo" parameterType="java.util.Map">
+select medicine_no,medicine_name,SUM(total_money) as total_money,create_date from (
+  select t1.medicine_no,t2.medicine_name,t1.quantity,t1.flow_card_id ,to_char(t3.create_date,'yyyy-mm') as create_date,t3.total_money
+  from t_flow_card_detail t1
+  left join t_medicine t2
+  on t1.medicine_no = t2.medicine_no
+  left join t_flow_card t3 
+  on t1.flow_card_id = t3.flow_card_id
+  where 1=1  
+  <if test="length != 0">
+  and t1.medicine_no in
+	  <foreach collection="medicineNoArray" item="item" open="(" close=")" separator=",">
+	  	#{item}
+	  </foreach>
+  </if>
+)t group by medicine_no,medicine_name ,create_date 
+
+<if test="startDate != null and startDate != ''">
+	having create_date &gt;=#{startDate}
+</if>
+<if test="endDate != null and endDate != ''">
+	and create_date &lt;=#{endDate}
+</if>
+</select>
+
+<select id="queryYearMedicineSaleInfo" parameterType="java.util.Map">
+select medicine_no,medicine_name,SUM(quantity) quantity,SUM(total_money) as total_money,medicine_type_name,create_date from (
+  select t1.medicine_no,t1.quantity,t1.flow_card_id , t2.medicine_name,t2.medicine_type_name,to_char(t3.create_date,'yyyy') as create_date,t3.total_money
+  from t_flow_card_detail t1
+  left join 
+  (select a1.medicine_no ,a1.medicine_name,a2.name as medicine_type_name from t_medicine a1,t_data_dict a2 where a1.function_type=a2.id) 
+  t2
+  on t1.medicine_no = t2.medicine_no
+  left join t_flow_card t3 
+  on t1.flow_card_id = t3.flow_card_id
+  where 1=1  
+)t group by medicine_no,medicine_name ,medicine_type_name,create_date having create_date='2013'
+
+</select>
+
+	<resultMap type="com.drp.domain.MedicineSaleInfo" id="medicineSaleInfo">
+		<result column="medicine_no" property="medicineNo"/>
+		<result column="medicine_name" property="medicineName"/>
+		<result column="total_money" property="totalMoney"/>
+		<result column="create_date" property="createDate"/>
+	</resultMap>
+	
+
+</mapper>

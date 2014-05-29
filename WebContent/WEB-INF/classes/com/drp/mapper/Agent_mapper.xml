@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drp.dao.AgentMapper">
+	
+	<select id="getAllAgent" resultMap="agentMap">
+		select * from t_agent
+	</select>
+	
+	
+	<insert id="addAgent" parameterType="com.drp.domain.Agent">
+		<selectKey keyProperty="agentId" resultType="int" order="BEFORE">
+			select agent_sequence.nextVAL from dual
+		</selectKey>
+		insert into t_agent (agent_id,agent_name,contact_man,create_date,email,telephone,fixed_phone,is_leaf,is_agent,pid,address,agent_level，detailed_address)
+		values(#{agentId},#{agentName},#{contactMan},#{createDate},#{email},#{telephone},#{fixedPhone},
+		#{isLeaf},#{isAgent},#{pid},#{areaDataModel.id},#{agentLevel},#{detailedAddress})
+	</insert>
+	
+	<!-- 获取所有用户 -->	
+	<select id="getSubAgentList" resultMap="agentMap" parameterType="com.drp.domain.Agent">
+		select agent_id,agent_name,address,contact_man,telephone,fixed_phone,email,pid,agent_level,
+				create_date,is_agent,is_leaf
+				from t_agent
+		where pid = #{agentId}
+	</select>
+	
+	
+	<!-- 根据id获取agent -->
+	<select id="getAgentById" parameterType="com.drp.domain.Agent" resultMap="agentMap">
+		select agent_id,agent_name,address,contact_man,telephone,fixed_phone,email,pid,agent_level,
+				create_date,is_agent,is_leaf,detailed_address
+				from t_agent
+		where agent_id = #{agentId}
+	</select>
+	
+	<!-- 检查某Address是否存在 -->
+	<select id="isAddressExist" parameterType="com.drp.domain.AreaDataModel" resultMap="addressMap">
+		select id,province_id,province_name,city_id,city_name,area_id,area_name from t_address
+		where province_id = #{provinceId}
+			<if test="cityId !=0">
+				and city_id = #{cityId}
+			</if>
+			<if test="areaId != 0">
+				and area_id = #{areaId}
+			</if>
+	</select>
+	
+	<!-- 插入地址 -->
+	<insert id="insertAddress" parameterType="com.drp.domain.AreaDataModel">
+		<selectKey keyProperty="id" resultType="int" order="BEFORE">
+			select  address_sequence.nextVAL  from dual
+		</selectKey>
+		insert into t_address (id,province_id,province_name,city_id,city_name,area_id,area_name) 
+				values (#{id},#{provinceId},#{provinceName},#{cityId},#{cityName},#{areaId},#{areaName})
+	</insert>
+	
+	<!--根据代码 查询地址 -->
+	<select id="getAddressById" parameterType="com.drp.domain.AreaDataModel" resultMap="addressMap">
+		select * from t_address where id= #{id}
+	</select>
+	
+	<!-- 插入节点后将父亲节点设置为非叶子 -->
+	<update id="setParentToNonLeaf" parameterType="com.drp.domain.Agent">
+		update t_agent set is_leaf = 'N' where agent_id = #{pid}
+	</update>
+	
+	
+	<!-- 删除分销商或者是节点 -->
+	<delete id="deleteAgent" parameterType="com.drp.domain.Agent">
+		delete from t_agent where agent_id = #{agentId} or pid = #{agentId}
+	</delete>
+	
+	<!-- 修改分销商 -->
+	<update id="modifyAgent" parameterType="com.drp.domain.Agent">
+		update t_agent set agent_id = #{agentId},
+							agent_name = #{agentName},
+							contact_man = #{contactMan},
+							telephone = #{telephone},
+							fixed_phone = #{fixedPhone},
+							email = #{email},
+							address = #{address},
+							agent_level = #{agentLevel},
+							detailed_address = #{detailedAddress}
+				where agent_id = #{agentId}
+	</update>
+	
+	
+	<resultMap type="com.drp.domain.AreaDataModel" id="addressMap">
+		<result column="id" property="id" javaType="int"/>
+		<result column="province_id" property="provinceId" javaType="int"/>
+		<result column="province_name" property="provinceName" javaType="string"/>
+		<result column="city_id" property="cityId" javaType="int"/>
+		<result column="city_name" property="cityName" javaType="string"/>
+		<result column="area_id" property="areaId" javaType="int"/>
+		<result column="area_name" property="areaName" javaType="string"/>
+	</resultMap>
+	
+	
+	<resultMap type="com.drp.domain.Agent" id="agentMap">
+		<result column="agent_id" property="agentId"/>
+		<result column="agent_name" property="agentName"/>
+		<result column="contact_man" property="contactMan"/>
+		<result column="email" property="email"/>
+		<result column="create_date" property="createDate"/>
+		<result column="address" property="address"/>
+		<result column="is_leaf" property="isLeaf"/>
+		<result column="is_agent" property="isAgent"/>
+		<result column="agent_level" property="agentLevel"/>
+		<result column="telephone" property="telephone"/>
+		<result column="fixed_phone" property="fixedPhone"/>
+		<result column="detailed_address" property="detailedAddress"/>
+	</resultMap>
+
+</mapper>

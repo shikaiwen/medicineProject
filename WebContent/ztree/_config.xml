@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="GBK"?>
+<treeConfig>
+  <treeName />
+  <treeCode />
+  <idColumn />
+  <pidColumn />
+  <sql>select agent_id,pid,agent_name from t_agent</sql>
+</treeConfig>
